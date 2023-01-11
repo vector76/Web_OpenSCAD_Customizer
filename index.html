@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <!-- pulled out preloads -->
+  
+  <!-- not sure about deps, leave them in for now -->
+  <script src="deps/three.min.js" defer></script>
+  <script src="deps/Projector.js" defer></script>
+  <script src="deps/stl_viewer.min.js" defer></script>
+  <script src="deps/webgl_detector.js" defer></script>
+  <script src="deps/OrbitControls.js" defer></script>
+  <script src="deps/parser.min.js" defer></script>
+  <script src="deps/TrackballControls.js" defer></script>
+  <script src="deps/CanvasRenderer.js" defer></script>
+
+  <!-- not sure about BrowserFS, leave in for now -->
+  <script src="browserfs.min.js" defer></script>
+  
+  <!-- pulled out all monaco stuff -->
+
+  <script>
+    (async() => {
+      if ('serviceWorker' in navigator) {
+        for (const reg of await navigator.serviceWorker.getRegistrations()) {
+          try {
+            reg.unregister()
+          } catch (e) {
+            console.error(e, e.stackTrace);
+          }
+        }
+      }
+    })();
+  </script>
+  
+  <script src="filesystem.js" defer></script>
+  <script type="module" src="main.js" defer></script>
+  <style>
+    body {
+      margin: 0;
+      /* overflow: hidden; */
+      min-height: 100vh;
+      /* mobile viewport bug fix */
+      min-height: -webkit-fill-available;
+    }
+
+    html {
+      height: -webkit-fill-available;
+    }
+
+    .root {
+      position: fixed;
+      left: 0;
+      top: 100;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #editor-panel,
+    #view-panel {
+      min-width: 40vw;
+      padding: 10px;
+      /* height: 100vh; */
+    }
+
+    #cheatsheet-link {
+      display: none;
+      position: fixed;
+      right: 120px;
+      top: 5px;
+      z-index: 10;
+      margin: 10px 20px; 
+    }
+
+    #flip-mode {
+      display: none;
+      position: fixed;
+      left: 5px;
+      top: 5px;
+      z-index: 10;
+      font-size: large;
+      padding: 10px 20px;
+      margin: 5px 0;
+    }
+
+    .iPadShowKeyboard {
+      right: 130px !important;
+    }
+
+    #view-panel {
+      width: 70vw;
+    }
+
+    #editor-panel {
+      width: 30vw;
+    }
+
+    .row {
+      display: flex;
+      flex-direction: row;
+    }
+
+    .col {
+      display: flex;
+      flex-direction: column;
+    }
+
+    #run, #kill {
+      padding: 5px;
+      margin-top: 5px;
+    }
+    .button {
+      margin-right: 10px;
+    }
+    .text {
+      padding: 5px 0 5px 0;
+    }
+    .text-fragment {
+      padding: 0 10px 0 10px;
+      align-self: center;
+    }
+    .logs-container {
+      overflow-y: scroll;
+      height: calc(min(200px, 30vh));
+      position: relative;
+    }
+    .deep-link {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+    }
+    #features {
+      position: fixed;
+      bottom: 0;
+    }
+    .spacer {
+      flex-grow: 1;
+    }
+
+    .title {
+      text-align: center;
+      width: 100%;
+    }
+    
+    #viewer {
+      min-height: 80vh;
+    }
+
+    @media only screen and (max-height: 600px),
+           only screen and (max-width: 600px),
+           only screen and (max-width: 767px),
+           only screen and (max-aspect-ratio: 1/2) {
+      .settings,
+      .desktop {
+        display: none;
+      }
+    }
+
+    @media only screen and (max-width: 767px),
+           only screen and (max-aspect-ratio: 1/2) {
+      
+      #cheatsheet-link {
+        display: block;
+      }
+      #flip-mode {
+        display: block;
+      }
+      /* .title {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+      } */
+      /* .title h1 {
+        font-size: large;
+      } */
+
+      #viewer {
+        padding: 10px 0;
+        position: absolute;
+        left: 0;
+        top: 50px;
+        right: 0;
+        bottom: 0;
+        /* height: calc(100vh - 55px); */
+        width: 100vw;
+      }
+
+      #viewer {
+        height: calc(100vh - 55px);
+      }
+
+      #link-container {
+        position: absolute;
+        bottom: 15px;
+        right: 15px;
+        z-index: 4;
+      }
+
+      .logs-container {
+        position: absolute;
+        bottom: 0;
+        height: 30vh;
+        width: 100vw;
+        left: 0;
+        z-index: 1;
+        background-color: rgba(255,255,255,0.7) !important;
+      }
+      .logs-container pre {
+        color: rgba(50, 50, 50, 0.9);
+        font-family: Consolas, "Courier New", monospace;
+        font-weight: normal;
+        font-size: 12px;
+      }
+
+      .minimap.slider-mouseover {
+        height: 80vh !important;
+        bottom: 0;
+      }
+
+      .overflow-guard,
+
+      #viewer {
+        z-index: 0;
+      }
+
+      #viewer.focused {
+        z-index: 3;
+      }
+
+      .features
+       {
+        display: none;
+      }
+    }
+  
+  </style>
+</head>
+
+<body>
+  <div class="root row">
+    <div id="editor-panel" class="col">
+      <a href="http://openscad.org/cheatsheet/" target="_blank" id="cheatsheet-link">Cheatsheet</a>
+      <button id="flip-mode">Flip</button>
+      <div id="dummyEditor">
+      xsize: <input type="text" name="opt_xsize" value="10", size="6", id="opt_xsize"></br>
+      ysize: <input type="text" name="opt_ysize" value="10", size="6", id="opt_ysize"></br>
+      zsize: <input type="text" name="opt_zsize" value="10", size="6", id="opt_zsize">
+      </div>
+      <div class="logs-container">
+        <pre><code id="logs"></code></pre>
+      </div>
+    </div>
+    <div id="view-panel" class="col">
+      <div class="text title desktop">
+        <h2>Parametric Web Generator</h2>
+      </div>
+      <div class="text desktop">
+        <span class="text-fragment">
+          <a target="_blank" href="https://github.com/DSchroer/openscad-wasm">WASM build</a>
+          + <a target="_blank" href="https://github.com/omrips/viewstl">STL Viewer</a>
+        </span>
+      </div>
+      <div class="text desktop">
+      </div>
+      <div class="row text">
+        <button class="button settings" id="run">Render (Ctrl+Enter)</button>
+        <button class="button settings" id="kill" disabled>Kill</button>
+        
+        <div class="text-fragment" id="link-container"></div>
+        <div class="text-fragment settings" id="meta"></div>
+
+        <span class="spacer settings"></span>
+
+        <span class="text-fragment settings"><input type="checkbox" id="autorender" checked>Render</span>
+        <span class="text-fragment settings"><input type="checkbox" id="autoparse" checked>Check</span>
+        <span class="text-fragment settings"><input type="checkbox" id="autorotate" checked>Rotate</span>
+        <span class="text-fragment settings"><input type="checkbox" id="show-experimental">Show experiments</span>
+        
+        <span class="spacer settings"></span>
+      </div>
+      <div id="viewer" tabindex="0"></div>
+      <span id="features" class="features"></span>
+    </div>
+  </div>
+
+</body>
+
+</html>
