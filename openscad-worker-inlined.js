@@ -1,6 +1,7 @@
 // AUTO GENERATED FILE - DO NOT EDIT
-var import_meta_url = 'http://localhost:8080/';
-//var import_meta_url = '';
+// I'm editing this file (against above advice) to get it to work.
+// Don't yet know enough to implement the proper solution
+var import_meta_url = 'https://vector76.github.io/web_customizer/';
 
 
 var OpenSCAD = (() => {
