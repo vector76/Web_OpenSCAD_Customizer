@@ -1,5 +1,4 @@
 import { createWasmMemory, spawnOpenSCAD } from './openscad-runner.js'
-import { writeStateInFragment, readStateFromFragment} from './state.js'
 import { buildFeatureCheckboxes } from './features.js';
 
 const editorElement = document.getElementById('dummyEditor');
@@ -7,23 +6,30 @@ const runButton = document.getElementById('run');
 const killButton = document.getElementById('kill');
 const metaElement = document.getElementById('meta');
 const linkContainerElement = document.getElementById('link-container');
-const autorenderCheckbox = document.getElementById('autorender');
-const autoparseCheckbox = document.getElementById('autoparse');
 const autorotateCheckbox = document.getElementById('autorotate');
-const showExperimentalFeaturesCheckbox = document.getElementById('show-experimental');
 const stlViewerElement = document.getElementById("viewer");
 const logsElement = document.getElementById("logs");
 const featuresContainer = document.getElementById("features");
 const flipModeButton = document.getElementById("flip-mode");
 
-const xsizeElt = document.getElementById("opt_xsize");
-const ysizeElt = document.getElementById("opt_ysize");
-const zsizeElt = document.getElementById("opt_zsize");
-const fixed_scad_code = 'include <model/model.scad>';
+// Add DOM elements based on the model_params
+const paramsDiv = document.getElementById("params");
+
+const queryParams = new URLSearchParams(location.search);
+
+for (var prop in model_params) {
+  const text = document.createElement('div');
+  text.id = 'param_div_' + prop;
+  // use query parameters if available, or fall back to default model parameters
+  const val = queryParams.get(prop) || model_params[prop];
+  text.innerHTML = prop + ": <input type='text' value='" + val + "' id='param_" + prop + "'/></br>";
+  paramsDiv.appendChild(text);
+  console.log("property name: " + prop)
+}
 
 const featureCheckboxes = {};
 
-var persistCameraState = false; // If one gets too far, it's really hard to auto reset and can be confusing to users. Just restart.
+var persistCameraState = false;
 var stlViewer;
 var stlFile;
 
@@ -39,7 +45,7 @@ function buildStlViewer() {
 
 function viewStlFile() {
   try { stlViewer.remove_model(1); } catch (e) {}
-  stlViewer.add_model({ id: 1, local_file: stlFile });
+  stlViewer.add_model({ id: 1, local_file: stlFile, rotationx: 1.5708 });
 }
 
 function addDownloadLink(container, blob, fileName) {
@@ -134,32 +140,7 @@ function processMergedOutputs(mergedOutputs, timestamp) {
   logsElement.innerText = allLines.join("\n")
 }
 
-const syntaxDelay = 300;
-const checkSyntax = turnIntoDelayableExecution(syntaxDelay, () => {
-  const source = fixed_scad_code; // editor.getValue();
-  const timestamp = Date.now();
-
-  const job = spawnOpenSCAD({
-    inputs: [['input.scad', source + '\n']],
-    args: ["input.scad", "-o", "out.ast"],
-  });
-
-  return {
-    kill: () => job.kill(),
-    completion: (async () => {
-      try {
-        const result = await job;
-        console.log(result);
-        processMergedOutputs(result.mergedOutputs, timestamp);
-      } catch (e) {
-        console.error(e);
-      }
-    })()
-  };
-});
-
 var sourceFileName;
-//var editor;
 
 function turnIntoDelayableExecution(delay, createJob) {
   var pendingId;
@@ -193,24 +174,29 @@ function turnIntoDelayableExecution(delay, createJob) {
 
 var renderDelay = 1000;
 const render = turnIntoDelayableExecution(renderDelay, () => {
-  const source = fixed_scad_code; // editor.getValue();
+  const source = model_reference;
   const timestamp = Date.now();
   metaElement.innerText = 'rendering...';
   metaElement.title = null;
   runButton.disabled = true;
   setExecuting(true);
   
+  var arglist = [ 
+    "input.scad",
+    "-o", outstl_name,
+    ...Object.keys(featureCheckboxes).filter(f => featureCheckboxes[f].checked).map(f => `--enable=${f}`),
+    ];
+
+  // add model parameters
+  for (var prop in model_params) {
+    const propElt = document.getElementById("param_" + prop);
+    arglist.push("-D", prop + "=" + propElt.value);
+  }
+  
   const job = spawnOpenSCAD({
     inputs: [['input.scad', source]],
-    args: [
-      "input.scad",
-      "-o", "out.stl",
-      "-D", "xsize="+xsizeElt.value,
-      "-D", "ysize="+ysizeElt.value,
-      "-D", "zsize="+zsizeElt.value,
-      ...Object.keys(featureCheckboxes).filter(f => featureCheckboxes[f].checked).map(f => `--enable=${f}`),
-    ],
-    outputPaths: ['out.stl']
+    args: arglist,
+    outputPaths: [outstl_name]
   });
 
   return {
@@ -260,14 +246,11 @@ function getState() {
   return {
     source: {
       name: sourceFileName,
-      content: fixed_scad_code, // editor.getValue();
+      content: model_reference,
     },
-    autorender: autorenderCheckbox.checked,
-    autoparse: autoparseCheckbox.checked,
     autorotate: autorotateCheckbox.checked,
     features,
     viewerFocused: isViewerFocused(),
-    showExp: showExperimentalFeaturesCheckbox.checked,
     camera: persistCameraState ? stlViewer.get_camera_state() : null,
   };
 }
@@ -292,20 +275,14 @@ function normalizeStateForCompilation(state) {
 const defaultState = {
   source: {
     name: 'input.stl',
-    content: fixed_scad_code,
+    content: model_reference,
   },
   maximumMegabytes: 1024,
   viewerFocused: false,
   features: ['fast-csg', 'fast-csg-trust-corefinement', 'fast-csg-remesh', 'fast-csg-exact-callbacks', 'lazy-union'],
 };
 
-function updateExperimentalCheckbox(temptativeChecked) {
-  const features = Object.keys(featureCheckboxes).filter(f => featureCheckboxes[f].checked);
-  const hasFeatures = features.length > 0;
-}
-
 function setState(state) {
-  // editor.setValue(state.source.content);
   sourceFileName = state.source.name || 'input.scad';
   if (state.camera && persistCameraState) {
     stlViewer.set_camera_state(state.camera);
@@ -315,32 +292,22 @@ function setState(state) {
     features = new Set(state.features);
     Object.keys(featureCheckboxes).forEach(f => featureCheckboxes[f].checked = features.has(f));
   }
-  autorenderCheckbox.checked = state.autorender ?? true;
-  autoparseCheckbox.checked = state.autoparse ?? true;
-  
   setAutoRotate(state.autorotate ?? true)
   setViewerFocused(state.viewerFocused ?? false);
-  updateExperimentalCheckbox(state.showExp ?? false);
 }
 
 var previousNormalizedState;
 function onStateChanged({allowRun}) {
   const newState = getState();
-  writeStateInFragment(newState);
 
-  featuresContainer.style.display = showExperimentalFeaturesCheckbox.checked ? null : 'none';
+  featuresContainer.style.display = 'none';
 
   const normalizedState = normalizeStateForCompilation(newState);
   if (JSON.stringify(previousNormalizedState) != JSON.stringify(normalizedState)) {
     previousNormalizedState = normalizedState;
     
     if (allowRun) {
-      if (autoparseCheckbox.checked) {
-        checkSyntax({now: false});
-      }
-      if (autorenderCheckbox.checked) {
-        render({now: false});
-      }
+      render({now: false});
     }
   }
 }
@@ -362,24 +329,18 @@ function pollCameraChanges() {
 try {
   stlViewer = buildStlViewer();
   stlViewerElement.ondblclick = () => {
-    console.log("Tap detected!");
     setAutoRotate(!autorotateCheckbox.checked);
     onStateChanged({allowRun: false});
   };
 
-  const initialState = readStateFromFragment() || defaultState;
+  const initialState = defaultState;
   
   setState(initialState);
   await buildFeatureCheckboxes(featuresContainer, featureCheckboxes, () => {  
-    updateExperimentalCheckbox();
     onStateChanged({allowRun: true});
   });
   setState(initialState);
   
-  showExperimentalFeaturesCheckbox.onchange = () => onStateChanged({allowRun: false});
-
-  autorenderCheckbox.onchange = () => onStateChanged({allowRun: autorenderCheckbox.checked});
-  autoparseCheckbox.onchange = () => onStateChanged({allowRun: autoparseCheckbox.checked});
   autorotateCheckbox.onchange = () => {
     stlViewer.set_auto_rotate(autorotateCheckbox.checked);
     onStateChanged({allowRun: false});
