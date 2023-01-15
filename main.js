@@ -12,20 +12,79 @@ const logsElement = document.getElementById("logs");
 const featuresContainer = document.getElementById("features");
 const flipModeButton = document.getElementById("flip-mode");
 
-// Add DOM elements based on the model_default_params
-const paramsDiv = document.getElementById("params");
-
 const queryParams = new URLSearchParams(location.search);
 
-for (var prop in model_default_params) {
-  const text = document.createElement('div');
-  text.id = 'param_div_' + prop;
-  // use query parameters if available, or fall back to default model parameters
-  const val = queryParams.get(prop) || model_default_params[prop];
-  text.innerHTML = prop + ": <input type='text' value='" + val + "' id='param_" + prop + "'/></br>";
-  paramsDiv.appendChild(text);
-  console.log("property name: " + prop)
+
+function getFormProp(prop) {
+  const propType = typeof model_default_params[prop];
+  const propElt = document.getElementById("param_" + prop);
+  if (propType == "boolean") {
+    return propElt.checked;
+  }
+  else if (propType === "number") {
+    return Number(propElt.value);
+  }
+  else {
+    // console.log("forcing element " + prop + " to string '" + String(propElt.value) + "'.");
+    return String(propElt.value);  // force to string
+  }
 }
+
+
+function paramChanged() {
+  var query_parts = [];
+  for (var prop in model_default_params) {
+    query_parts.push(prop + "=" + getFormProp(prop));
+  }
+  
+  // update permalink
+  const permalink = document.getElementById("permalink");  // should be <a href...
+  permalink.href = "?" + query_parts.join("&");
+}
+
+
+function generateParamForm() {
+  // Add DOM elements based on the model_default_params
+  const paramsDiv = document.getElementById("params");
+  for (var prop in model_default_params) {
+    const text = document.createElement('div');
+    text.id = 'param_div_' + prop;
+    
+    const dval = model_default_params[prop];  // default value always defined
+    const propType = typeof dval;
+    const qstr = queryParams.get(prop);       // always string or undefined
+    
+    //console.log(prop + " is of type " + propType + " with query value '" + qstr + "' and default " + dval);
+    
+    if (propType == "boolean") {
+      const val = (typeof qstr === 'string') ? qstr.toLowerCase() === 'true' : dval;
+      if (val) {
+        text.innerHTML = prop + ": <input type='checkbox' checked id='param_" + prop + "'/></br>";
+      }
+      else {
+        text.innerHTML = prop + ": <input type='checkbox' id='param_" + prop + "'/></br>";
+      }
+    }
+    else if (propType === "number") {
+      const val1 = (typeof qstr === 'string') ? Number(qstr) : dval;
+      // check for nan by testing if value equals itself
+      const val = val1 == val1 ? val1 : dval;
+      text.innerHTML = prop + ": <input type='number' value='" + val + "' id='param_" + prop + "'/></br>";
+    }
+    else {
+      // anything else assuming string for now (no drop-downs implemented yet)
+      const val = (typeof qstr === 'string') ? qstr : dval;
+      text.innerHTML = prop + ": <input type='text' value='" + val + "' id='param_" + prop + "'/></br>";
+    }
+    paramsDiv.appendChild(text);
+    const newinp = document.getElementById("param_" + prop);
+    newinp.onchange = paramChanged;
+  }
+}
+
+generateParamForm();
+paramChanged();
+
 
 const featureCheckboxes = {};
 
@@ -190,9 +249,16 @@ const render = turnIntoDelayableExecution(renderDelay, () => {
 
   // add model parameters
   for (var prop in model_default_params) {
-    const propElt = document.getElementById("param_" + prop);
-    arglist.push("-D", prop + "=" + propElt.value);
+    if (typeof model_default_params[prop] == "string") {
+      arglist.push("-D", prop + '="' + getFormProp(prop) + '"');
+    }
+    else {
+      // number and boolean work with ordinary typecasting
+      arglist.push("-D", prop + "=" + getFormProp(prop));
+    }
   }
+  
+  // console.log(arglist);
   
   const job = spawnOpenSCAD({
     inputs: [['input.scad', source]],
@@ -206,7 +272,7 @@ const render = turnIntoDelayableExecution(renderDelay, () => {
     completion: (async () => {
       try {
         const result = await job;
-        console.log(result);
+        // console.log(result);
         processMergedOutputs(result.mergedOutputs, timestamp);
   
         if (result.error) {
