@@ -50,6 +50,13 @@ function generateParamForm() {
     const text = document.createElement('div');
     text.id = 'param_div_' + prop;
     
+    if (typeof model_param_desriptions == 'object') {
+      var helpstr = model_param_desriptions[prop];
+      if (typeof helpstr == 'string') {
+        text.innerHTML += helpstr + '</br>';
+      }
+    }
+    
     const dval = model_default_params[prop];  // default value always defined
     const propType = typeof dval;
     const qstr = queryParams.get(prop);       // always string or undefined
@@ -59,22 +66,22 @@ function generateParamForm() {
     if (propType == "boolean") {
       const val = (typeof qstr === 'string') ? qstr.toLowerCase() === 'true' : dval;
       if (val) {
-        text.innerHTML = prop + ": <input type='checkbox' checked id='param_" + prop + "'/></br>";
+        text.innerHTML += prop + ": <input type='checkbox' checked id='param_" + prop + "'/></br></br>";
       }
       else {
-        text.innerHTML = prop + ": <input type='checkbox' id='param_" + prop + "'/></br>";
+        text.innerHTML += prop + ": <input type='checkbox' id='param_" + prop + "'/></br></br>";
       }
     }
     else if (propType === "number") {
       const val1 = (typeof qstr === 'string') ? Number(qstr) : dval;
       // check for nan by testing if value equals itself
       const val = val1 == val1 ? val1 : dval;
-      text.innerHTML = prop + ": <input type='number' value='" + val + "' id='param_" + prop + "'/></br>";
+      text.innerHTML += prop + ": <input type='number' value='" + val + "' id='param_" + prop + "'/></br></br>";
     }
     else {
       // anything else assuming string for now (no drop-downs implemented yet)
       const val = (typeof qstr === 'string') ? qstr : dval;
-      text.innerHTML = prop + ": <input type='text' value='" + val + "' id='param_" + prop + "'/></br>";
+      text.innerHTML += prop + ": <input type='text' value='" + val + "' id='param_" + prop + "'/></br></br>";
     }
     paramsDiv.appendChild(text);
     const newinp = document.getElementById("param_" + prop);
