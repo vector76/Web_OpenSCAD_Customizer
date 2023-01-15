@@ -25,13 +25,13 @@ var Module=typeof OpenSCAD!=="undefined"?OpenSCAD:{};var readyPromiseResolve,rea
 importScripts("browserfs.min.js");
 importScripts('filesystem.js');
 
-const allArchiveNames = Object.keys(zipArchives)
-const allZipMountsPromise = getBrowserFSLibrariesMounts(allArchiveNames);
-
 addEventListener('message', async (e) => {
 
-  const { inputs, args, outputPaths, wasmMemory } = e.data;
+  const { inputs, args, outputPaths, zipArchives, wasmMemory } = e.data;
 
+  const allArchiveNames = zipArchives ?? [];
+  const allZipMountsPromise = getBrowserFSLibrariesMounts(allArchiveNames);
+  
   const mergedOutputs = [];
   try {
     const instance = await OpenSCAD({

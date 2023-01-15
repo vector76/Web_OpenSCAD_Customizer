@@ -13,17 +13,16 @@
   <script src="browserfs.min.js" defer></script>
 
   <script>
-    const model_reference = 'include <model/model.scad>';
+    const model_path = 'model/model.scad';  // folder name (actually zip file) and source file name
   
-    // only used as defaults, live updates occur in DOM input elements, not in this variable
-    const model_params = {
+    const outstl_name = 'model_out.stl';
+  
+    const model_default_params = {
       xsize: 10,
       ysize: 10,
       zsize: 10,
     };
     
-    const outstl_name = 'model_out.stl';
-  
     (async() => {
       if ('serviceWorker' in navigator) {
         for (const reg of await navigator.serviceWorker.getRegistrations()) {

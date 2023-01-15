@@ -1,4 +1,4 @@
-import { createWasmMemory, spawnOpenSCAD } from './openscad-runner.js'
+import { spawnOpenSCAD } from './openscad-runner.js'
 import { buildFeatureCheckboxes } from './features.js';
 
 const editorElement = document.getElementById('dummyEditor');
@@ -12,16 +12,16 @@ const logsElement = document.getElementById("logs");
 const featuresContainer = document.getElementById("features");
 const flipModeButton = document.getElementById("flip-mode");
 
-// Add DOM elements based on the model_params
+// Add DOM elements based on the model_default_params
 const paramsDiv = document.getElementById("params");
 
 const queryParams = new URLSearchParams(location.search);
 
-for (var prop in model_params) {
+for (var prop in model_default_params) {
   const text = document.createElement('div');
   text.id = 'param_div_' + prop;
   // use query parameters if available, or fall back to default model parameters
-  const val = queryParams.get(prop) || model_params[prop];
+  const val = queryParams.get(prop) || model_default_params[prop];
   text.innerHTML = prop + ": <input type='text' value='" + val + "' id='param_" + prop + "'/></br>";
   paramsDiv.appendChild(text);
   console.log("property name: " + prop)
@@ -45,7 +45,7 @@ function buildStlViewer() {
 
 function viewStlFile() {
   try { stlViewer.remove_model(1); } catch (e) {}
-  stlViewer.add_model({ id: 1, local_file: stlFile, rotationx: 1.5708 });
+  stlViewer.add_model({ id: 1, local_file: stlFile, rotationx: -1.5708 });
 }
 
 function addDownloadLink(container, blob, fileName) {
@@ -174,7 +174,8 @@ function turnIntoDelayableExecution(delay, createJob) {
 
 var renderDelay = 1000;
 const render = turnIntoDelayableExecution(renderDelay, () => {
-  const source = model_reference;
+  const source = 'include <' + model_path + '>';
+  const model_dir = model_path.split(/[\\/]/)[0];
   const timestamp = Date.now();
   metaElement.innerText = 'rendering...';
   metaElement.title = null;
@@ -188,7 +189,7 @@ const render = turnIntoDelayableExecution(renderDelay, () => {
     ];
 
   // add model parameters
-  for (var prop in model_params) {
+  for (var prop in model_default_params) {
     const propElt = document.getElementById("param_" + prop);
     arglist.push("-D", prop + "=" + propElt.value);
   }
@@ -196,7 +197,8 @@ const render = turnIntoDelayableExecution(renderDelay, () => {
   const job = spawnOpenSCAD({
     inputs: [['input.scad', source]],
     args: arglist,
-    outputPaths: [outstl_name]
+    outputPaths: [outstl_name],
+    zipArchives: [model_dir],  // just a list of zip files (no longer an object)
   });
 
   return {
@@ -246,7 +248,7 @@ function getState() {
   return {
     source: {
       name: sourceFileName,
-      content: model_reference,
+      content: 'include <' + model_path + '>',
     },
     autorotate: autorotateCheckbox.checked,
     features,
@@ -275,7 +277,7 @@ function normalizeStateForCompilation(state) {
 const defaultState = {
   source: {
     name: 'input.stl',
-    content: model_reference,
+    content: 'include <' + model_path + '>',
   },
   maximumMegabytes: 1024,
   viewerFocused: false,
