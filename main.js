@@ -14,21 +14,20 @@ const flipModeButton = document.getElementById("flip-mode");
 const queryParams = new URLSearchParams(location.search);
 
 function getFormProp(prop) {
-  const propType = typeof model_default_params[prop];
+  const propType = typeof model_params[prop].defaultValue;
   const propElt = document.getElementById("param_" + prop);
-  if (propType == "boolean") {
+  if (propType === "boolean") {
     return propElt.checked;
-  } else if (propType === "number") {
-    return Number(propElt.value);
-  } else {
-    // console.log("forcing element " + prop + " to string '" + String(propElt.value) + "'.");
-    return String(propElt.value); // force to string
   }
+  if (propType === "number") {
+    return Number(propElt.value);
+  }
+  return String(propElt.value);
 }
 
 function paramChanged() {
   const query_parts = [];
-  for (const prop in model_default_params) {
+  for (const prop in model_params) {
     query_parts.push(prop + "=" + getFormProp(prop));
   }
 
@@ -38,20 +37,18 @@ function paramChanged() {
 }
 
 function generateParamForm() {
-  // Add DOM elements based on the model_default_params
+  // Add DOM elements based on the model_params
   const paramsDiv = document.getElementById("params");
-  for (const param in model_default_params) {
+  for (const param in model_params) {
     const text = document.createElement("div");
     text.id = "param_div_" + param;
 
-    if (typeof model_param_desriptions === "object") {
-      const description = model_param_desriptions[param];
-      if (typeof description == "string") {
-        text.innerHTML += description + "</br>";
-      }
+    const description = model_params[param].description;
+    if (description) {
+      text.innerHTML += description + "</br>";
     }
 
-    const defaultValue = model_default_params[param]; // default value always defined
+    const defaultValue = model_params[param].defaultValue;
     const paramType = typeof defaultValue;
     const qstr = queryParams.get(param); // always string or undefined
 
@@ -265,8 +262,8 @@ const render = turnIntoDelayableExecution(renderDelay, () => {
   ];
 
   // add model parameters
-  for (const prop in model_default_params) {
-    if (typeof model_default_params[prop] == "string") {
+  for (const prop in model_params) {
+    if (typeof model_params[prop].defaultValue === "string") {
       arglist.push("-D", prop + '="' + getFormProp(prop) + '"');
     } else {
       // number and boolean work with ordinary typecasting
