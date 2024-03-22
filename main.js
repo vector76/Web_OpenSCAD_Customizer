@@ -43,16 +43,12 @@ function generateParamForm() {
     const text = document.createElement("div");
     text.id = "param_div_" + param;
 
+    const label = model_params[param].label;
     const description = model_params[param].description;
-    if (description) {
-      text.innerHTML += description + "</br>";
-    }
-
     const defaultValue = model_params[param].defaultValue;
     const paramType = model_params[param].type;
     const qstr = queryParams.get(param); // always string or undefined
 
-    text.innerHTML += `<code>${param}</code>: `;
     let inputRaw;
     if (paramType === "checkbox") {
       const checked = (typeof qstr === "string")
@@ -84,8 +80,13 @@ function generateParamForm() {
       const value = (typeof qstr === "string") ? qstr : defaultValue;
       inputRaw = `<input type="text" value="${value}" id="param_${param}" />`;
     }
-    text.innerHTML += inputRaw;
-    text.innerHTML += "</br></br>";
+    text.innerHTML = `
+    <div class="input">
+      <label for="param_${param}">${label}</label>
+      <p>${description}</p>
+      ${inputRaw}
+    </div>
+    `;
     paramsDiv.appendChild(text);
     const newinp = document.getElementById("param_" + param);
     newinp.onchange = paramChanged;

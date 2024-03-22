@@ -183,3 +183,15 @@ code {
     display: none;
   }
 }
+
+.input {
+  margin-block: 1rem;
+}
+.input label {
+  display: block;
+}
+.input p {
+  margin-block: 0.25rem;
+  font-style: italic;
+  font-size: 0.8rem;
+}
