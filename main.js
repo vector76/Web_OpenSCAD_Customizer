@@ -14,9 +14,9 @@ const flipModeButton = document.getElementById("flip-mode");
 const queryParams = new URLSearchParams(location.search);
 
 function getFormProp(prop) {
-  const propType = typeof model_params[prop].defaultValue;
+  const propType = model_params[prop].type;
   const propElt = document.getElementById("param_" + prop);
-  if (propType === "boolean") {
+  if (propType === "checkbox") {
     return propElt.checked;
   }
   if (propType === "number") {
@@ -49,12 +49,12 @@ function generateParamForm() {
     }
 
     const defaultValue = model_params[param].defaultValue;
-    const paramType = typeof defaultValue;
+    const paramType = model_params[param].type;
     const qstr = queryParams.get(param); // always string or undefined
 
     text.innerHTML += `<code>${param}</code>: `;
     let inputRaw;
-    if (paramType === "boolean") {
+    if (paramType === "checkbox") {
       const checked = (typeof qstr === "string")
         ? qstr.toLowerCase() === "true"
         : defaultValue;
@@ -65,8 +65,22 @@ function generateParamForm() {
       // check for nan by testing if value equals itself
       const value = anyValue == anyValue ? anyValue : defaultValue;
       inputRaw = `<input type="number" value="${value}" id="param_${param}" />`;
+    } else if (paramType === "select") {
+      const selectedOption = (typeof qstr === "string") ? qstr : defaultValue;
+      console.log("selectedOption", selectedOption);
+      const options = model_params[param].options ?? [];
+      inputRaw = `
+      <select id="param_${param}">
+      ${
+        options.map((option) =>
+          `<option value="${option}" ${
+            selectedOption === option ? "selected" : ""
+          }>${option}</option>`
+        )
+      }
+      </select>
+      `;
     } else {
-      // anything else assuming string for now (no drop-downs implemented yet)
       const value = (typeof qstr === "string") ? qstr : defaultValue;
       inputRaw = `<input type="text" value="${value}" id="param_${param}" />`;
     }

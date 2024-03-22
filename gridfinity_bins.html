@@ -17,67 +17,97 @@
 
       const outstl_name = "model_out.stl";
 
-      /** @typedef {Record<string, {defaultValue: number | boolean | string, description: string}} ModelParams */
+      /**
+       * @typedef {Record<string, {
+       *    defaultValue: number | boolean | string,
+       *    description: string,
+       *    type: "text" | "number" | "checkbox" | "select"
+       *    options?: string[]
+       *    }
+       * } ModelParams
+       */
+      /** @type ModelParams */
       const model_params = {
         width: {
           defaultValue: 1,
           description: "Number of grid units left-to-right (x axis)",
+          type: "number",
         },
         depth: {
           defaultValue: 1,
           description: "Number of grid units front-to-back (y axis)",
+          type: "number",
         },
         height: {
           defaultValue: 6,
           description: "Height of bin in standard units (multiples of 7 mm)",
+          type: "number",
         },
         magnet_diameter: {
           defaultValue: 0,
           description:
             "Include hole for magnet (Zack's design is 6.5 mm) or 0 to omit magnet hole",
+          type: "number",
         },
         screw_depth: {
           defaultValue: 0,
           description:
             "Include deeper narrow hole for screw (Zack's design is 6 mm) or 0 to omit screw hole",
+          type: "number",
         },
         hole_overhang_remedy: {
           defaultValue: true,
           description:
             "If both screw and magnet are defined, include feature for better printing of magnet/screw overhang",
+          type: "checkbox",
         },
         chambers: {
           defaultValue: 1,
           description:
             "Number of subdivisions along x axis (uniform divisions)",
+          type: "number",
         },
         withLabel: {
           defaultValue: "disabled",
-          description:
-            "Include overhang for label and control position, can be 'disabled', 'left', 'right', 'center', 'leftchanber', 'rightchamber', or 'centerchamber'",
+          description: "Include overhang for label and control position",
+          type: "select",
+          options: [
+            "disabled",
+            "left",
+            "right",
+            "center",
+            "leftchanber",
+            "rightchamber",
+            "centerchamber",
+          ],
         },
         fingerslide: {
           defaultValue: true,
           description: "Include large corner fillet on the front",
+          type: "checkbox",
         },
         labelWidth: {
           defaultValue: 0,
           description:
             "Width of label in number of units, or zero to indicate full width",
+          type: "number",
         },
         wall_thickness: {
           defaultValue: 0.95,
           description: "Thickness of outer walls (Zack's design is 0.95)",
+          type: "number",
         },
         efficient_floor: {
           defaultValue: false,
           description:
             "Efficient floor option saves material and time, but the floor is not smooth (only applies if no magnets, screws, or finger-slide used)",
+          type: "checkbox",
         },
         lip_style: {
           defaultValue: "normal",
-          description:
-            "Style of lip at top of walls, can be 'normal', 'reduced', or 'none'",
+          description: "Style of lip at top of walls",
+          type: "select",
+          options: ["normal", "reduced", "none"],
         },
       };
 
