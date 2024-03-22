@@ -55,7 +55,7 @@ function generateParamForm() {
     const paramType = typeof defaultValue;
     const qstr = queryParams.get(param); // always string or undefined
 
-    text.innerHTML += `${param}: `;
+    text.innerHTML += `<code>${param}</code>: `;
     let inputRaw;
     if (paramType === "boolean") {
       const checked = (typeof qstr === "string")
