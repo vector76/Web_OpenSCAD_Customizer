@@ -63,7 +63,6 @@ function generateParamForm() {
       inputRaw = `<input type="number" value="${value}" id="param_${param}" />`;
     } else if (paramType === "select") {
       const selectedOption = (typeof qstr === "string") ? qstr : defaultValue;
-      console.log("selectedOption", selectedOption);
       const options = model_params[param].options ?? [];
       inputRaw = `
       <select id="param_${param}">
@@ -398,7 +397,7 @@ function setState(state) {
       featureCheckboxes[f].checked = features.has(f)
     );
   }
-  setAutoRotate(state.autorotate ?? true);
+  setAutoRotate(state.autorotate ?? false);
   setViewerFocused(state.viewerFocused ?? false);
 }
 
