@@ -55,24 +55,26 @@ function generateParamForm() {
     const paramType = typeof defaultValue;
     const qstr = queryParams.get(param); // always string or undefined
 
+    text.innerHTML += `${param}: `;
+    let inputRaw;
     if (paramType === "boolean") {
       const checked = (typeof qstr === "string")
         ? qstr.toLowerCase() === "true"
         : defaultValue;
-      text.innerHTML +=
-        `${param}: <input type="checkbox" checked="${checked}" id="param_${param}" /></br></br>`;
+      inputRaw =
+        `<input type="checkbox" checked="${checked}" id="param_${param}" />`;
     } else if (paramType === "number") {
       const anyValue = (typeof qstr === "string") ? Number(qstr) : defaultValue;
       // check for nan by testing if value equals itself
       const value = anyValue == anyValue ? anyValue : defaultValue;
-      text.innerHTML +=
-        `${param}: <input type="number" value="${value}" id="param_${param}" /></br></br>`;
+      inputRaw = `<input type="number" value="${value}" id="param_${param}" />`;
     } else {
       // anything else assuming string for now (no drop-downs implemented yet)
       const value = (typeof qstr === "string") ? qstr : defaultValue;
-      text.innerHTML +=
-        `${param}: <input type="text" value="${value}" id="param_${param}" /></br></br>`;
+      inputRaw = `<input type="text" value="${value}" id="param_${param}" />`;
     }
+    text.innerHTML += inputRaw;
+    text.innerHTML += "</br></br>";
     paramsDiv.appendChild(text);
     const newinp = document.getElementById("param_" + param);
     newinp.onchange = paramChanged;
