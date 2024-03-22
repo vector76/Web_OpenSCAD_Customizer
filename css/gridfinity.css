@@ -113,6 +113,11 @@ body {
   min-height: 80vh;
 }
 
+pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+}
+
 @media only screen and (max-height: 600px),
   only screen and (max-width: 600px),
   only screen and (max-width: 767px),
@@ -161,8 +166,6 @@ body {
   }
   .logs-container pre {
     color: rgba(50, 50, 50, 0.9);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-      "Liberation Mono", "Courier New", monospace;
     font-weight: normal;
     font-size: 12px;
   }
