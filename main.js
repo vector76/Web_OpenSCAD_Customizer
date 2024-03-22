@@ -1,7 +1,6 @@
 import { spawnOpenSCAD } from "./openscad-runner.js";
 import { buildFeatureCheckboxes } from "./features.js";
 
-const editorElement = document.getElementById("dummyEditor");
 const runButton = document.getElementById("run");
 const killButton = document.getElementById("kill");
 const metaElement = document.getElementById("meta");
@@ -28,8 +27,8 @@ function getFormProp(prop) {
 }
 
 function paramChanged() {
-  var query_parts = [];
-  for (var prop in model_default_params) {
+  const query_parts = [];
+  for (const prop in model_default_params) {
     query_parts.push(prop + "=" + getFormProp(prop));
   }
 
@@ -41,12 +40,12 @@ function paramChanged() {
 function generateParamForm() {
   // Add DOM elements based on the model_default_params
   const paramsDiv = document.getElementById("params");
-  for (var prop in model_default_params) {
+  for (const prop in model_default_params) {
     const text = document.createElement("div");
     text.id = "param_div_" + prop;
 
     if (typeof model_param_desriptions == "object") {
-      var helpstr = model_param_desriptions[prop];
+      const helpstr = model_param_desriptions[prop];
       if (typeof helpstr == "string") {
         text.innerHTML += helpstr + "</br>";
       }
@@ -90,9 +89,9 @@ paramChanged();
 
 const featureCheckboxes = {};
 
-var persistCameraState = false;
-var stlViewer;
-var stlFile;
+const persistCameraState = false;
+let stlViewer;
+let stlFile;
 
 function buildStlViewer() {
   const stlViewer = new StlViewer(stlViewerElement);
@@ -107,7 +106,9 @@ function buildStlViewer() {
 function viewStlFile() {
   try {
     stlViewer.remove_model(1);
-  } catch (e) {}
+  } catch (_e) {
+    //
+  }
   stlViewer.add_model({ id: 1, local_file: stlFile, rotationx: -1.5708 });
 }
 
@@ -158,7 +159,7 @@ function setExecuting(v) {
   killButton.disabled = !v;
 }
 
-var lastProcessedOutputsTimestamp;
+let lastProcessedOutputsTimestamp;
 
 function processMergedOutputs(mergedOutputs, timestamp) {
   if (
@@ -171,10 +172,9 @@ function processMergedOutputs(mergedOutputs, timestamp) {
   }
   lastProcessedOutputsTimestamp = timestamp;
 
-  let unmatchedLines = [];
-  let allLines = [];
+  const unmatchedLines = [];
+  const allLines = [];
 
-  const markers = [];
   let warningCount = 0, errorCount = 0;
   const addError = (error, file, line) => {
   };
@@ -216,11 +216,11 @@ function processMergedOutputs(mergedOutputs, timestamp) {
   logsElement.innerText = allLines.join("\n");
 }
 
-var sourceFileName;
+let sourceFileName;
 
 function turnIntoDelayableExecution(delay, createJob) {
-  var pendingId;
-  var runningJobKillSignal;
+  let pendingId;
+  let runningJobKillSignal;
 
   const doExecute = async () => {
     if (runningJobKillSignal) {
@@ -235,7 +235,7 @@ function turnIntoDelayableExecution(delay, createJob) {
       runningJobKillSignal = null;
     }
   };
-  return async ({ now }) => {
+  return ({ now }) => {
     if (pendingId) {
       clearTimeout(pendingId);
       pendingId = null;
@@ -248,7 +248,7 @@ function turnIntoDelayableExecution(delay, createJob) {
   };
 }
 
-var renderDelay = 1000;
+const renderDelay = 1000;
 const render = turnIntoDelayableExecution(renderDelay, () => {
   const source = "include <" + model_path + ">";
   const model_dir = model_path.split(/[\\/]/)[0];
@@ -258,7 +258,7 @@ const render = turnIntoDelayableExecution(renderDelay, () => {
   runButton.disabled = true;
   setExecuting(true);
 
-  var arglist = [
+  const arglist = [
     "input.scad",
     "-o",
     outstl_name,
@@ -268,7 +268,7 @@ const render = turnIntoDelayableExecution(renderDelay, () => {
   ];
 
   // add model parameters
-  for (var prop in model_default_params) {
+  for (const prop in model_default_params) {
     if (typeof model_default_params[prop] == "string") {
       arglist.push("-D", prop + '="' + getFormProp(prop) + '"');
     } else {
@@ -393,7 +393,7 @@ function setState(state) {
   setViewerFocused(state.viewerFocused ?? false);
 }
 
-var previousNormalizedState;
+let previousNormalizedState;
 function onStateChanged({ allowRun }) {
   const newState = getState();
 
