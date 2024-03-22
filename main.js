@@ -40,46 +40,48 @@ function paramChanged() {
 function generateParamForm() {
   // Add DOM elements based on the model_default_params
   const paramsDiv = document.getElementById("params");
-  for (const prop in model_default_params) {
+  for (const param in model_default_params) {
     const text = document.createElement("div");
-    text.id = "param_div_" + prop;
+    text.id = "param_div_" + param;
 
-    if (typeof model_param_desriptions == "object") {
-      const helpstr = model_param_desriptions[prop];
-      if (typeof helpstr == "string") {
-        text.innerHTML += helpstr + "</br>";
+    if (typeof model_param_desriptions === "object") {
+      const description = model_param_desriptions[param];
+      if (typeof description == "string") {
+        text.innerHTML += description + "</br>";
       }
     }
 
-    const dval = model_default_params[prop]; // default value always defined
-    const propType = typeof dval;
-    const qstr = queryParams.get(prop); // always string or undefined
+    const defaultValue = model_default_params[param]; // default value always defined
+    const paramType = typeof defaultValue;
+    const qstr = queryParams.get(param); // always string or undefined
 
-    if (propType == "boolean") {
+    if (paramType === "boolean") {
       const val = (typeof qstr === "string")
         ? qstr.toLowerCase() === "true"
-        : dval;
+        : defaultValue;
       if (val) {
-        text.innerHTML += prop + ": <input type='checkbox' checked id='param_" +
-          prop + "'/></br></br>";
+        text.innerHTML += param +
+          ": <input type='checkbox' checked id='param_" +
+          param + "'/></br></br>";
       } else {
-        text.innerHTML += prop + ": <input type='checkbox' id='param_" + prop +
+        text.innerHTML += param + ": <input type='checkbox' id='param_" +
+          param +
           "'/></br></br>";
       }
-    } else if (propType === "number") {
-      const val1 = (typeof qstr === "string") ? Number(qstr) : dval;
+    } else if (paramType === "number") {
+      const val1 = (typeof qstr === "string") ? Number(qstr) : defaultValue;
       // check for nan by testing if value equals itself
-      const val = val1 == val1 ? val1 : dval;
-      text.innerHTML += prop + ": <input type='number' value='" + val +
-        "' id='param_" + prop + "'/></br></br>";
+      const val = val1 == val1 ? val1 : defaultValue;
+      text.innerHTML += param + ": <input type='number' value='" + val +
+        "' id='param_" + param + "'/></br></br>";
     } else {
       // anything else assuming string for now (no drop-downs implemented yet)
-      const val = (typeof qstr === "string") ? qstr : dval;
-      text.innerHTML += prop + ": <input type='text' value='" + val +
-        "' id='param_" + prop + "'/></br></br>";
+      const val = (typeof qstr === "string") ? qstr : defaultValue;
+      text.innerHTML += param + ": <input type='text' value='" + val +
+        "' id='param_" + param + "'/></br></br>";
     }
     paramsDiv.appendChild(text);
-    const newinp = document.getElementById("param_" + prop);
+    const newinp = document.getElementById("param_" + param);
     newinp.onchange = paramChanged;
   }
 }
