@@ -195,3 +195,12 @@ code {
   font-style: italic;
   font-size: 0.8rem;
 }
+
+form#params {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+form#params > div {
+  width: 50%;
+}
