@@ -32,33 +32,31 @@
         width: {
           label: "Width (units)",
           defaultValue: 1,
-          description: "Number of grid units left-to-right (x axis)",
+          description: "Grid units left-to-right (x axis)",
           type: "number",
         },
         depth: {
           label: "Length (units)",
           defaultValue: 1,
-          description: "Number of grid units front-to-back (y axis)",
+          description: "Grid units front-to-back (y axis)",
           type: "number",
         },
         height: {
           label: "Height (units)",
           defaultValue: 6,
-          description: "Height of bin in standard units (multiples of 7 mm)",
+          description: "Multiples of 7 mm",
           type: "number",
         },
         magnet_diameter: {
           label: "Magnet hole diameter ⌀ (mm)",
           defaultValue: 0,
-          description:
-            "Include hole for magnet (Zack's design is 6.5 mm) or 0 to omit magnet hole",
+          description: "Zack's design is 6.5 mm, or 0 to omit magnet hole",
           type: "number",
         },
         screw_depth: {
           label: "Screw depth (mm)",
           defaultValue: 0,
-          description:
-            "Include deeper narrow hole for screw (Zack's design is 6 mm) or 0 to omit screw hole",
+          description: "Zack's design is 6 mm, or 0 to omit screw hole",
           type: "number",
         },
         hole_overhang_remedy: {
@@ -71,14 +69,13 @@
         chambers: {
           label: "Dividers",
           defaultValue: 1,
-          description:
-            "Number of subdivisions along x axis (uniform divisions)",
+          description: "Subdivisions along X-axis (uniform divisions)",
           type: "number",
         },
         withLabel: {
-          label: "Label",
+          label: "Label and position",
           defaultValue: "disabled",
-          description: "Include overhang for label and control position",
+          description: "",
           type: "select",
           options: [
             "disabled",
@@ -93,33 +90,32 @@
         fingerslide: {
           label: "Include fingerslide",
           defaultValue: true,
-          description: "Include large corner fillet on the front",
+          description: "Large corner fillet on the front",
           type: "checkbox",
         },
         labelWidth: {
           label: "Label width (units)",
           defaultValue: 0,
-          description:
-            "Width of label in number of units, or zero to indicate full width",
+          description: "In units, or 0 for full width",
           type: "number",
         },
         wall_thickness: {
           label: "Wall thickness (mm)",
           defaultValue: 0.95,
-          description: "Thickness of outer walls (Zack's design is 0.95)",
+          description: "For outer walls (Zack's design is 0.95)",
           type: "number",
         },
         efficient_floor: {
           label: "Efficient floor",
           defaultValue: false,
           description:
-            "Efficient floor option saves material and time, but the floor is not smooth (only applies if no magnets, screws, or finger-slide used)",
+            "Saves material and time, but the floor is not smooth (only applies if no magnets, screws, or finger-slide used)",
           type: "checkbox",
         },
         lip_style: {
           label: "Lip style",
           defaultValue: "normal",
-          description: "Style of lip at top of walls",
+          description: "For top of walls",
           type: "select",
           options: ["normal", "reduced", "none"],
         },
