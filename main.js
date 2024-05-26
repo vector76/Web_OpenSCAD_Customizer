@@ -82,7 +82,7 @@ function generateParamForm() {
     text.innerHTML = `
     <div class="input">
       <label for="param_${param}">${label}</label>
-      <p>${description}</p>
+      ${description ? `<p>${description}</p>` : ""}
       ${inputRaw}
     </div>
     `;
