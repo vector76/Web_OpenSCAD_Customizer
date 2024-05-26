@@ -397,7 +397,7 @@ function setState(state) {
       featureCheckboxes[f].checked = features.has(f)
     );
   }
-  setAutoRotate(state.autorotate ?? false);
+  setAutoRotate(state.autorotate ?? true);
   setViewerFocused(state.viewerFocused ?? false);
 }
 
