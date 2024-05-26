@@ -1,279 +1,186 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
+  <head>
+    <script src="deps/three.min.js" defer></script>
+    <script src="deps/Projector.js" defer></script>
+    <script src="deps/stl_viewer.min.js" defer></script>
+    <script src="deps/webgl_detector.js" defer></script>
+    <script src="deps/OrbitControls.js" defer></script>
+    <script src="deps/parser.min.js" defer></script>
+    <script src="deps/TrackballControls.js" defer></script>
+    <script src="deps/CanvasRenderer.js" defer></script>
+    <script src="browserfs.min.js" defer></script>
+    <link rel="stylesheet" href="/css/styles.css" />
 
-<head>
-  <script src="deps/three.min.js" defer></script>
-  <script src="deps/Projector.js" defer></script>
-  <script src="deps/stl_viewer.min.js" defer></script>
-  <script src="deps/webgl_detector.js" defer></script>
-  <script src="deps/OrbitControls.js" defer></script>
-  <script src="deps/parser.min.js" defer></script>
-  <script src="deps/TrackballControls.js" defer></script>
-  <script src="deps/CanvasRenderer.js" defer></script>
-  <script src="browserfs.min.js" defer></script>
+    <script>
+      const model_path = "gridfinity_bins/gridfinity_basic_cup.scad"; // folder name (actually zip file) and source file name
 
-  <script>
-    const model_path = 'gridfinity_bins/gridfinity_basic_cup.scad';  // folder name (actually zip file) and source file name
-  
-    const outstl_name = 'model_out.stl';
-  
-    const model_default_params = {
-      width: 1,
-      depth: 1,
-      height: 6,
-      magnet_diameter: 0,
-      screw_depth: 0,
-      hole_overhang_remedy: true,
-      chambers: 1,
-      withLabel: "disabled",
-      fingerslide: true,
-      labelWidth: 0,
-      wall_thickness: 0.95,
-      efficient_floor: false,
-      lip_style: "normal",
-    };
-    
-    const model_param_desriptions = {
-      width: "Number of grid units left-to-right (x axis)",
-      depth: "Number of grid units front-to-back (y axis)",
-      height: "Height of bin in standard units (multiples of 7 mm)",
-      magnet_diameter: "Include hole for magnet (Zack's design is 6.5 mm) or 0 to omit magnet hole",
-      screw_depth: "Include deeper narrow hole for screw (Zack's design is 6 mm) or 0 to omit screw hole",
-      hole_overhang_remedy: "If both screw and magnet are defined, include feature for better printing of magnet/screw overhang",
-      chambers: "Number of subdivisions along x axis (uniform divisions)",
-      withLabel: "Include overhang for label and control position, can be 'disabled', 'left', 'right', 'center', 'leftchanber', 'rightchamber', or 'centerchamber'",
-      fingerslide: "Include large corner fillet on the front",
-      labelWidth: "Width of label in number of units, or zero to indicate full width",
-      wall_thickness: "Thickness of outer walls (Zack's design is 0.95)",
-      efficient_floor: "Efficient floor option saves material and time, but the floor is not smooth (only applies if no magnets, screws, or finger-slide used)",
-      lip_style: "Style of lip at top of walls, can be 'normal', 'reduced', or 'none'",
-    };
-    
-    (async() => {
-      if ('serviceWorker' in navigator) {
-        for (const reg of await navigator.serviceWorker.getRegistrations()) {
-          try {
-            reg.unregister()
-          } catch (e) {
-            console.error(e, e.stackTrace);
+      const outstl_name = "model_out.stl";
+
+      /**
+       * @typedef {Record<string, {
+       *    label: string;
+       *    defaultValue: number | boolean | string;
+       *    description: string;
+       *    type: "text" | "number" | "checkbox" | "select";
+       *    options?: string[];
+       *    }
+       * } ModelParams
+       */
+      /** @type ModelParams */
+      const model_params = {
+        width: {
+          label: "Width (units)",
+          defaultValue: 1,
+          description: "Grid units left-to-right (x axis)",
+          type: "number",
+        },
+        depth: {
+          label: "Length (units)",
+          defaultValue: 1,
+          description: "Grid units front-to-back (y axis)",
+          type: "number",
+        },
+        height: {
+          label: "Height (units)",
+          defaultValue: 6,
+          description: "Multiples of 7 mm",
+          type: "number",
+        },
+        magnet_diameter: {
+          label: "Magnet hole diameter ⌀ (mm)",
+          defaultValue: 0,
+          description: "Zack's design is 6.5 mm, or 0 to omit magnet hole",
+          type: "number",
+        },
+        screw_depth: {
+          label: "Screw depth (mm)",
+          defaultValue: 0,
+          description: "Zack's design is 6 mm, or 0 to omit screw hole",
+          type: "number",
+        },
+        hole_overhang_remedy: {
+          label: "Hole overhang",
+          defaultValue: true,
+          description:
+            "If both screw and magnet are defined, include feature for better printing of magnet/screw overhang",
+          type: "checkbox",
+        },
+        chambers: {
+          label: "Dividers",
+          defaultValue: 1,
+          description: "Subdivisions along X-axis (uniform divisions)",
+          type: "number",
+        },
+        withLabel: {
+          label: "Label and position",
+          defaultValue: "disabled",
+          description: "",
+          type: "select",
+          options: [
+            "disabled",
+            "left",
+            "right",
+            "center",
+            "leftchanber",
+            "rightchamber",
+            "centerchamber",
+          ],
+        },
+        fingerslide: {
+          label: "Include fingerslide",
+          defaultValue: true,
+          description: "Large corner fillet on the front",
+          type: "checkbox",
+        },
+        labelWidth: {
+          label: "Label width (units)",
+          defaultValue: 0,
+          description: "In units, or 0 for full width",
+          type: "number",
+        },
+        wall_thickness: {
+          label: "Wall thickness (mm)",
+          defaultValue: 0.95,
+          description: "For outer walls (Zack's design is 0.95)",
+          type: "number",
+        },
+        efficient_floor: {
+          label: "Efficient floor",
+          defaultValue: false,
+          description:
+            "Saves material and time, but the floor is not smooth (only applies if no magnets, screws, or finger-slide used)",
+          type: "checkbox",
+        },
+        lip_style: {
+          label: "Lip style",
+          defaultValue: "normal",
+          description: "For top of walls",
+          type: "select",
+          options: ["normal", "reduced", "none"],
+        },
+      };
+
+      (async () => {
+        if ("serviceWorker" in navigator) {
+          for (const reg of await navigator.serviceWorker.getRegistrations()) {
+            try {
+              reg.unregister();
+            } catch (e) {
+              console.error(e, e.stackTrace);
+            }
           }
         }
-      }
-    })();
-  </script>
-  
-  <script src="filesystem.js" defer></script>
-  <script type="module" src="main.js" defer></script>
-  <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      min-height: -webkit-fill-available;
-    }
+      })();
+    </script>
 
-    html {
-      height: -webkit-fill-available;
-    }
+    <script src="filesystem.js" defer></script>
+    <script type="module" src="main.js" defer></script>
+    <title>Gridfinity Parametric Web Generator</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🖨️</text></svg>"
+    />
+  </head>
 
-    .root {
-      position: fixed;
-      left: 0;
-      top: 100;
-      width: 100vw;
-      height: 100vh;
-    }
-
-    #editor-panel,
-    #view-panel {
-      min-width: 40vw;
-      padding: 10px;
-      /* height: 100vh; */
-    }
-
-    #flip-mode {
-      display: none;
-      position: fixed;
-      left: 5px;
-      top: 5px;
-      z-index: 10;
-      font-size: large;
-      padding: 10px 20px;
-      margin: 5px 0;
-    }
-
-    .iPadShowKeyboard {
-      right: 130px !important;
-    }
-
-    #view-panel {
-      width: 70vw;
-    }
-
-    #editor-panel {
-      width: 30vw;
-    }
-
-    .row {
-      display: flex;
-      flex-direction: row;
-    }
-
-    .col {
-      display: flex;
-      flex-direction: column;
-    }
-
-    #run, #kill {
-      padding: 5px;
-      margin-top: 5px;
-    }
-    .button {
-      margin-right: 10px;
-    }
-    .text {
-      padding: 5px 0 5px 0;
-    }
-    .text-fragment {
-      padding: 0 10px 0 10px;
-      align-self: center;
-    }
-    .logs-container {
-      overflow-y: scroll;
-      height: calc(min(200px, 30vh));
-      position: relative;
-    }
-    .deep-link {
-      position: absolute;
-      top: 5px;
-      right: 5px;
-    }
-    #features {
-      position: fixed;
-      bottom: 0;
-    }
-    .spacer {
-      flex-grow: 1;
-    }
-
-    .title {
-      text-align: center;
-      width: 100%;
-    }
-    
-    #viewer {
-      min-height: 80vh;
-    }
-
-    @media only screen and (max-height: 600px),
-           only screen and (max-width: 600px),
-           only screen and (max-width: 767px),
-           only screen and (max-aspect-ratio: 1/2) {
-      .settings,
-      .desktop {
-        display: none;
-      }
-    }
-
-    @media only screen and (max-width: 767px),
-           only screen and (max-aspect-ratio: 1/2) {
-      
-      #flip-mode {
-        display: block;
-      }
-
-      #viewer {
-        padding: 10px 0;
-        position: absolute;
-        left: 0;
-        top: 50px;
-        right: 0;
-        bottom: 0;
-        width: 100vw;
-      }
-
-      #viewer {
-        height: calc(100vh - 55px);
-      }
-
-      #link-container {
-        position: absolute;
-        bottom: 15px;
-        right: 15px;
-        z-index: 4;
-      }
-
-      .logs-container {
-        position: absolute;
-        bottom: 0;
-        height: 30vh;
-        width: 100vw;
-        left: 0;
-        z-index: 1;
-        background-color: rgba(255,255,255,0.7) !important;
-      }
-      .logs-container pre {
-        color: rgba(50, 50, 50, 0.9);
-        font-family: Consolas, "Courier New", monospace;
-        font-weight: normal;
-        font-size: 12px;
-      }
-
-      #viewer {
-        z-index: 0;
-      }
-
-      #viewer.focused {
-        z-index: 3;
-      }
-
-      .features
-      {
-        display: none;
-      }
-    }
-  
-  </style>
-</head>
-
-<body>
-  <div class="root row">
-    <div id="editor-panel" class="col">
-      <button id="flip-mode">Flip</button>
-      <div id="params">
-      
+  <body>
+    <div class="root row">
+      <div id="editor-panel" class="col">
+        <button id="flip-mode">Flip</button>
+        <form id="params"></form>
+        <div>
+          <br />
+          <a href="" id="permalink">Link to current parameters</a>
+        </div>
+        <div class="logs-container">
+          <pre><code id="logs"></code></pre>
+        </div>
       </div>
-      <div>
-      <br/>
-      <a href='' id="permalink">Link to current parameters</a>
-      </div>
-      <div class="logs-container">
-        <pre><code id="logs"></code></pre>
+      <div id="view-panel" class="col">
+        <div class="text title desktop">
+          <h1>Gridfinity Parametric Web Generator</h1>
+        </div>
+        <div class="text desktop">
+          <a href="https://github.com/vector76/Web_OpenSCAD_Customizer"
+            >Web OpenSCAD Customizer Project</a
+          ><br />
+          <a href="https://github.com/vector76/gridfinity_openscad"
+            >Gridfinity OpenSCAD</a
+          >
+        </div>
+        <div class="text desktop"></div>
+        <div class="row text">
+          <button class="button settings" id="run">Render (Ctrl+Enter)</button>
+          <button class="button settings" id="kill" disabled>Kill</button>
+          <div class="text-fragment" id="link-container"></div>
+          <div class="text-fragment settings" id="meta"></div>
+          <label class="text-fragment settings">
+            <input type="checkbox" id="autorotate" />Rotate
+          </label>
+        </div>
+        <div id="viewer" tabindex="0"></div>
+        <span id="features" class="features"></span>
       </div>
     </div>
-    <div id="view-panel" class="col">
-      <div class="text title desktop">
-        <h2>Gridfinity Parametric Web Generator</h2>
-      </div>
-      <div class="text desktop">
-      <a href="https://github.com/vector76/Web_OpenSCAD_Customizer">Web OpenSCAD Customizer Project</a><br/>
-      <a href="https://github.com/vector76/gridfinity_openscad">Gridfinity OpenSCAD</a>
-      </div>
-      <div class="text desktop">
-      </div>
-      <div class="row text">
-        <button class="button settings" id="run">Render (Ctrl+Enter)</button>
-        <button class="button settings" id="kill" disabled>Kill</button>
-        <div class="text-fragment" id="link-container"></div>
-        <div class="text-fragment settings" id="meta"></div>
-        <span class="spacer settings"></span>
-        <span class="text-fragment settings"><input type="checkbox" id="autorotate" checked>Rotate</span>
-        <span class="spacer settings"></span>
-      </div>
-      <div id="viewer" tabindex="0"></div>
-      <span id="features" class="features"></span>
-    </div>
-  </div>
-
-</body>
-
+  </body>
 </html>

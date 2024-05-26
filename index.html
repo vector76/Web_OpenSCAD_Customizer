@@ -1,255 +1,104 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
+  <head>
+    <script src="deps/three.min.js" defer></script>
+    <script src="deps/Projector.js" defer></script>
+    <script src="deps/stl_viewer.min.js" defer></script>
+    <script src="deps/webgl_detector.js" defer></script>
+    <script src="deps/OrbitControls.js" defer></script>
+    <script src="deps/parser.min.js" defer></script>
+    <script src="deps/TrackballControls.js" defer></script>
+    <script src="deps/CanvasRenderer.js" defer></script>
+    <script src="browserfs.min.js" defer></script>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🖨️</text></svg>"
+    />
 
-<head>
-  <script src="deps/three.min.js" defer></script>
-  <script src="deps/Projector.js" defer></script>
-  <script src="deps/stl_viewer.min.js" defer></script>
-  <script src="deps/webgl_detector.js" defer></script>
-  <script src="deps/OrbitControls.js" defer></script>
-  <script src="deps/parser.min.js" defer></script>
-  <script src="deps/TrackballControls.js" defer></script>
-  <script src="deps/CanvasRenderer.js" defer></script>
-  <script src="browserfs.min.js" defer></script>
+    <script>
+      const model_path = "model/model.scad"; // folder name (actually zip file) and source file name
 
-  <script>
-    const model_path = 'model/model.scad';  // folder name (actually zip file) and source file name
-  
-    const outstl_name = 'model_out.stl';
-  
-    const model_default_params = {
-      xsize: 10,
-      ysize: 10,
-      zsize: 10,
-    };
-    
-    (async() => {
-      if ('serviceWorker' in navigator) {
-        for (const reg of await navigator.serviceWorker.getRegistrations()) {
-          try {
-            reg.unregister()
-          } catch (e) {
-            console.error(e, e.stackTrace);
+      const outstl_name = "model_out.stl";
+
+      const model_params = {
+        xsize: {
+          label: "X size",
+          defaultValue: 10,
+          type: "number",
+        },
+        ysize: {
+          label: "Y size",
+          defaultValue: 10,
+          type: "number",
+        },
+        zsize: {
+          label: "Z size",
+          defaultValue: 10,
+          type: "number",
+        },
+      };
+
+      (async () => {
+        if ("serviceWorker" in navigator) {
+          for (const reg of await navigator.serviceWorker.getRegistrations()) {
+            try {
+              reg.unregister();
+            } catch (e) {
+              console.error(e, e.stackTrace);
+            }
           }
         }
-      }
-    })();
-  </script>
-  
-  <script src="filesystem.js" defer></script>
-  <script type="module" src="main.js" defer></script>
-  <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      min-height: -webkit-fill-available;
-    }
+      })();
+    </script>
 
-    html {
-      height: -webkit-fill-available;
-    }
+    <script src="filesystem.js" defer></script>
+    <script type="module" src="main.js" defer></script>
+  </head>
 
-    .root {
-      position: fixed;
-      left: 0;
-      top: 100;
-      width: 100vw;
-      height: 100vh;
-    }
-
-    #editor-panel,
-    #view-panel {
-      min-width: 40vw;
-      padding: 10px;
-      /* height: 100vh; */
-    }
-
-    #flip-mode {
-      display: none;
-      position: fixed;
-      left: 5px;
-      top: 5px;
-      z-index: 10;
-      font-size: large;
-      padding: 10px 20px;
-      margin: 5px 0;
-    }
-
-    .iPadShowKeyboard {
-      right: 130px !important;
-    }
-
-    #view-panel {
-      width: 70vw;
-    }
-
-    #editor-panel {
-      width: 30vw;
-    }
-
-    .row {
-      display: flex;
-      flex-direction: row;
-    }
-
-    .col {
-      display: flex;
-      flex-direction: column;
-    }
-
-    #run, #kill {
-      padding: 5px;
-      margin-top: 5px;
-    }
-    .button {
-      margin-right: 10px;
-    }
-    .text {
-      padding: 5px 0 5px 0;
-    }
-    .text-fragment {
-      padding: 0 10px 0 10px;
-      align-self: center;
-    }
-    .logs-container {
-      overflow-y: scroll;
-      height: calc(min(200px, 30vh));
-      position: relative;
-    }
-    .deep-link {
-      position: absolute;
-      top: 5px;
-      right: 5px;
-    }
-    #features {
-      position: fixed;
-      bottom: 0;
-    }
-    .spacer {
-      flex-grow: 1;
-    }
-
-    .title {
-      text-align: center;
-      width: 100%;
-    }
-    
-    #viewer {
-      min-height: 80vh;
-    }
-
-    @media only screen and (max-height: 600px),
-           only screen and (max-width: 600px),
-           only screen and (max-width: 767px),
-           only screen and (max-aspect-ratio: 1/2) {
-      .settings,
-      .desktop {
-        display: none;
-      }
-    }
-
-    @media only screen and (max-width: 767px),
-           only screen and (max-aspect-ratio: 1/2) {
-      
-      #flip-mode {
-        display: block;
-      }
-
-      #viewer {
-        padding: 10px 0;
-        position: absolute;
-        left: 0;
-        top: 50px;
-        right: 0;
-        bottom: 0;
-        width: 100vw;
-      }
-
-      #viewer {
-        height: calc(100vh - 55px);
-      }
-
-      #link-container {
-        position: absolute;
-        bottom: 15px;
-        right: 15px;
-        z-index: 4;
-      }
-
-      .logs-container {
-        position: absolute;
-        bottom: 0;
-        height: 30vh;
-        width: 100vw;
-        left: 0;
-        z-index: 1;
-        background-color: rgba(255,255,255,0.7) !important;
-      }
-      .logs-container pre {
-        color: rgba(50, 50, 50, 0.9);
-        font-family: Consolas, "Courier New", monospace;
-        font-weight: normal;
-        font-size: 12px;
-      }
-
-      #viewer {
-        z-index: 0;
-      }
-
-      #viewer.focused {
-        z-index: 3;
-      }
-
-      .features
-      {
-        display: none;
-      }
-    }
-  
-  </style>
-</head>
-
-<body>
-  <div class="root row">
-    <div id="editor-panel" class="col">
-      <button id="flip-mode">Flip</button>
-      <div id="params">
-      
+  <body>
+    <div class="root row">
+      <div id="editor-panel" class="col">
+        <button id="flip-mode">Flip</button>
+        <div id="params"></div>
+        <div>
+          <br />
+          <a href="" id="permalink">Link to current parameters</a>
+        </div>
+        <div class="logs-container">
+          <pre><code id="logs"></code></pre>
+        </div>
       </div>
-      <div>
-      <br/>
-      <a href='' id="permalink">Link to current parameters</a>
-      </div>
-      <div class="logs-container">
-        <pre><code id="logs"></code></pre>
+      <div id="view-panel" class="col">
+        <div class="text title desktop">
+          <h2>Parametric Web Generator</h2>
+        </div>
+        <div class="text desktop">
+          <span class="text-fragment">
+            <a target="_blank" href="https://github.com/DSchroer/openscad-wasm"
+              >WASM build</a
+            >
+            +
+            <a target="_blank" href="https://github.com/omrips/viewstl"
+              >STL Viewer</a
+            >
+          </span>
+        </div>
+        <div class="text desktop"></div>
+        <div class="row text">
+          <button class="button settings" id="run">Render (Ctrl+Enter)</button>
+          <button class="button settings" id="kill" disabled>Kill</button>
+          <div class="text-fragment" id="link-container"></div>
+          <div class="text-fragment settings" id="meta"></div>
+          <span class="spacer settings"></span>
+          <span class="text-fragment settings"
+            ><input type="checkbox" id="autorotate" checked />Rotate</span
+          >
+          <span class="spacer settings"></span>
+        </div>
+        <div id="viewer" tabindex="0"></div>
+        <span id="features" class="features"></span>
       </div>
     </div>
-    <div id="view-panel" class="col">
-      <div class="text title desktop">
-        <h2>Parametric Web Generator</h2>
-      </div>
-      <div class="text desktop">
-        <span class="text-fragment">
-          <a target="_blank" href="https://github.com/DSchroer/openscad-wasm">WASM build</a>
-          + <a target="_blank" href="https://github.com/omrips/viewstl">STL Viewer</a>
-        </span>
-      </div>
-      <div class="text desktop">
-      </div>
-      <div class="row text">
-        <button class="button settings" id="run">Render (Ctrl+Enter)</button>
-        <button class="button settings" id="kill" disabled>Kill</button>
-        <div class="text-fragment" id="link-container"></div>
-        <div class="text-fragment settings" id="meta"></div>
-        <span class="spacer settings"></span>
-        <span class="text-fragment settings"><input type="checkbox" id="autorotate" checked>Rotate</span>
-        <span class="spacer settings"></span>
-      </div>
-      <div id="viewer" tabindex="0"></div>
-      <span id="features" class="features"></span>
-    </div>
-  </div>
-
-</body>
-
+  </body>
 </html>
