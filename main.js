@@ -98,6 +98,7 @@ const featureCheckboxes = {};
 var persistCameraState = false;
 var stlViewer;
 var stlFile;
+var svgFile;
 
 function buildStlViewer() {
   const stlViewer = new StlViewer(stlViewerElement);
@@ -274,6 +275,33 @@ const render = turnIntoDelayableExecution(renderDelay, () => {
     zipArchives: [model_dir],  // just a list of zip files (no longer an object)
   });
 
+  var only_3d = (typeof outsvg_name === 'undefined');
+
+  if (!only_3d) {
+    var arglist2 = [ 
+      "input.scad",
+      "-o", outsvg_name,
+      ...Object.keys(featureCheckboxes).filter(f => featureCheckboxes[f].checked).map(f => `--enable=${f}`),
+      ];
+      
+    for (var prop in model_default_params) {
+      if (typeof model_default_params[prop] == "string") {
+        arglist2.push("-D", prop + '="' + getFormProp(prop) + '"');
+      }
+      else {
+        arglist2.push("-D", prop + "=" + getFormProp(prop));
+      }
+    }
+    arglist2.push("-D", "render_2d=true");
+
+    var job2 = spawnOpenSCAD({
+      inputs: [['input.scad', source]],
+      args: arglist2,
+      outputPaths: [outsvg_name],
+      zipArchives: [model_dir],  // just a list of zip files (no longer an object)
+    });
+  }
+
   return {
     kill: () => job.kill(),
     completion: (async () => {
@@ -300,8 +328,31 @@ const render = turnIntoDelayableExecution(renderDelay, () => {
 
         viewStlFile(stlFile);
 
-        linkContainerElement.innerHTML = '';
-        addDownloadLink(linkContainerElement, blob, fileName);
+        if (only_3d) {
+          linkContainerElement.innerHTML = '';
+          addDownloadLink(linkContainerElement, blob, fileName);
+        }
+        else {
+          // result from SVG rendering is available for download
+          const result2 = await job2;
+          // console.log(result);
+          processMergedOutputs(result2.mergedOutputs, timestamp);
+    
+          if (result2.error) {
+            throw result2.error;
+          }
+          
+          const [output2] = result2.outputs;
+          if (!output2) throw 'No output from runner!'
+          const [filePath2, content2] = output2;
+          const filePathFragments2 = filePath2.split('/');
+          const fileName2 = filePathFragments2[filePathFragments2.length - 1];
+
+          const blob2 = new Blob([content2], { type: "application/octet-stream" });
+          svgFile = new File([blob], fileName2);
+          linkContainerElement.innerHTML = '';
+          addDownloadLink(linkContainerElement, blob2, fileName2);
+        }
       } catch (e) {
         console.error(e, e.stack);
         metaElement.innerText = '<failed>';
