@@ -24,6 +24,7 @@
       dogbones: 3.5,
       front_plate: true,
       bottom_plate: true,
+      front_wing_size: 8.0,
     };
     
     const model_param_desriptions = {
@@ -31,7 +32,8 @@
       num_braces: "Number of braces (leave 0 for reasonable defaults)",
       dogbones: "Size of dogbone feature for inside corners",
       front_plate: "Include front plate",
-      bottom_plate: "Include bottom plate"
+      bottom_plate: "Include bottom plate",
+      front_wing_size: "(advanced) Wing size for front plate.  <br>Recommended limit is 8.0 for 32mm tubes,<br>10.8 for 30mm tubes,<br>or 11.5 for 29.5 mm tubes."
     };
     
     (async() => {
@@ -240,6 +242,9 @@
         <h2>Parametric Web Generator for LR4 Strut Plates</h2>
       </div>
       <div class="text desktop">
+        <span class="text-fragment">
+          LR4 strut plates <a target="_blank" href="lr4_strut_plate_3d.zip">OpenSCAD file</a>
+        </span>
       </div>
       <div class="text desktop">
       </div>
