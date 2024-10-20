@@ -76,18 +76,14 @@
     }
 
     .root {
-      position: fixed;
-      left: 0;
-      top: 100;
-      width: 100vw;
+      display: flex;
+      flex-direction: row;
       height: 100vh;
     }
 
     #editor-panel,
     #view-panel {
-      min-width: 40vw;
       padding: 10px;
-      /* height: 100vh; */
     }
 
     #flip-mode {
@@ -111,6 +107,7 @@
 
     #editor-panel {
       width: 30vw;
+      overflow-y: auto; /* Make left pane scrollable */
     }
 
     .row {
@@ -138,7 +135,7 @@
       align-self: center;
     }
     .logs-container {
-      overflow-y: scroll;
+      overflow-y: auto;
       height: calc(min(200px, 30vh));
       position: relative;
     }
