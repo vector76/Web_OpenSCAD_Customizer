@@ -11,6 +11,7 @@ const stlViewerElement = document.getElementById("viewer");
 const logsElement = document.getElementById("logs");
 const featuresContainer = document.getElementById("features");
 const flipModeButton = document.getElementById("flip-mode");
+const paramsForm = document.getElementById("params");
 
 const queryParams = new URLSearchParams(location.search);
 
@@ -91,6 +92,11 @@ function generateParamForm() {
 
 generateParamForm();
 paramChanged();
+
+paramsForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  render({ now: true });
+});
 
 
 const featureCheckboxes = {};

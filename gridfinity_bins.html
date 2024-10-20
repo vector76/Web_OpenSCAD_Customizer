@@ -255,9 +255,9 @@
   <div class="root row">
     <div id="editor-panel" class="col">
       <button id="flip-mode">Flip</button>
-      <div id="params">
-      
-      </div>
+      <form id="params">
+      <input type="submit" hidden />
+      </form>
       <div>
       <br/>
       <a href='' id="permalink">Link to current parameters</a>
@@ -277,7 +277,7 @@
       <div class="text desktop">
       </div>
       <div class="row text">
-        <button class="button settings" id="run">Render (Ctrl+Enter)</button>
+        <button class="button settings" id="run">Render (Enter)</button>
         <button class="button settings" id="kill" disabled>Kill</button>
         <div class="text-fragment" id="link-container"></div>
         <div class="text-fragment settings" id="meta"></div>
