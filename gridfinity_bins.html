@@ -41,7 +41,7 @@
       screw_depth: "Include deeper narrow hole for screw (Zack's design is 6 mm) or 0 to omit screw hole",
       hole_overhang_remedy: "If both screw and magnet are defined, include feature for better printing of magnet/screw overhang",
       chambers: "Number of subdivisions along x axis (uniform divisions)",
-      withLabel: "Include overhang for label and control position, can be 'disabled', 'left', 'right', 'center', 'leftchamber', 'rightchamber', or 'centerchamber'",
+      withLabel: "Include overhang feature for label and control position, can be 'disabled', 'left', 'right', 'center', 'leftchamber', 'rightchamber', or 'centerchamber' <span class='tooltip-trigger'>(hover for more info)</span><div class='tooltip-text'>When labelWidth (below) is nonzero and therefore not the full width of the bin, the label feature can be left, right, or center justified relative to the entire bin. If x-subdivisions (chambers) are 2 or greater, then 'leftchamber', 'rightchamber', or 'centerchamber' places a label feature on each subdivision, justified relative to the subdivision.</div>",
       fingerslide: "Include large corner fillet on the front",
       labelWidth: "Width of label in number of units, or zero to indicate full width",
       wall_thickness: "Thickness of outer walls (Zack's design is 0.95)",
@@ -65,6 +65,25 @@
   <script src="filesystem.js" defer></script>
   <script type="module" src="main.js" defer></script>
   <style>
+    .tooltip-trigger {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .tooltip-text {
+      position: absolute;
+      visibility: hidden;
+      background-color: #fff;
+      border: 1px solid #ddd;
+      padding: 5px;
+      text-align: center;
+      z-index: 1;
+    }
+
+    .tooltip-trigger:hover + .tooltip-text {
+      visibility: visible;
+    }
+
     body {
       margin: 0;
       min-height: 100vh;
